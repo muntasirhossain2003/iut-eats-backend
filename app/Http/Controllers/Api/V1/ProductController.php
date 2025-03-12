@@ -90,6 +90,58 @@ class ProductController extends Controller
 
     return response()->json($data, 200);
 }
+public function uploadProduct(Request $request)
+    {
+        // Validate the incoming request data
+        $validator = Validator::make($request->all(), [
+            'name'        => 'required|string|max:255',
+            'description' => 'required|string',
+            'price'       => 'required|integer',
+            'img'         => 'required|image|max:2048', // image validation, max size 2MB
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Validation failed',
+                'errors'  => $validator->errors()
+            ], 400);
+        }
+
+        // Handle image upload
+        if ($request->hasFile('img')) {
+            $image = $request->file('img');
+            // Create a unique filename using current timestamp
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            // Define a destination path (public/uploads/images)
+            $destinationPath = public_path('/uploads/images');
+            // Move the file to the destination path
+            $image->move($destinationPath, $imageName);
+            // Generate the URL for the uploaded image
+            $imgUrl = 'images/' . $imageName;
+        }
+
+        // Create a new Food product using the validated data
+        $food = new Food();
+        $food->name = $request->input('name');
+        $food->description = $request->input('description');
+        $food->price = $request->input('price');
+        $food->img = $imgUrl;
+        // Set default values for fields managed by the server
+        $food->location = 'Gazipur';
+        $food->type_id = 3;
+        $food->stars = 4;
+        $food->people = 5;
+        $food->selected_people = 5;
+
+        $food->save();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Product uploaded successfully',
+            'product' => $food
+        ], 200);
+    }
     
 
        public function test_get_recommended_products(Request $request){

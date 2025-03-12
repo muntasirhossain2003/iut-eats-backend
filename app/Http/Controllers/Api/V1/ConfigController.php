@@ -24,7 +24,7 @@ class ConfigController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
        
-        $response = Http::get('https://maps.googleapis.com/maps/api/geocode/json?latlng='.$request->lat.','.$request->lng.'&key='."Your key the one you put in your flutter");
+        $response = Http::get('https://maps.googleapis.com/maps/api/geocode/json?latlng='.$request->lat.','.$request->lng.'&key='."AIzaSyDw06Pb4KkJo3kUnq5vCeTHXEJZx4_X7jM");
         return $response->json();
     }
         public function get_zone(Request $request)
@@ -52,5 +52,58 @@ class ConfigController extends Controller
         }*/
         //return response()->json(['message'=>trans('messages.we_are_temporarily_unavailable_in_this_area')], 403);
          return response()->json(['zone_id'=>1], 200);
+    }
+    public function place_api_autocomplete(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'search_text' => 'required',
+        ]);
+    
+        if ($validator->errors()->count() > 0) {
+            return response()->json(
+                ['errors' => Helpers::error_processor($validator)],
+                403
+            );
+        }
+    
+        $payload = [
+            'input' => $request['search_text'],
+            'languageCode' => 'en', // Adjust as needed
+            'regionCode' => 'us',   // Adjust as needed
+        ];
+    
+        $response = Http::withHeaders([
+            'X-Goog-Api-Key' => 'AIzaSyDw06Pb4KkJo3kUnq5vCeTHXEJZx4_X7jM',
+            'Content-Type' => 'application/json',
+        ])->post('https://places.googleapis.com/v1/places:autocomplete', $payload);
+    
+        return $response->json();
+    }
+    public function place_api_details(Request $request)
+    {
+        // Validate that 'place_id' is provided
+        $validator = Validator::make($request->all(), [
+            'place_id' => 'required',
+        ]);
+    
+        // Return validation errors if any
+        if ($validator->errors()->count() > 0) {
+            return response()->json(
+                ['errors' => Helpers::error_processor($validator)],
+                403
+            );
+        }
+    
+        // Get the place ID from the request
+        $placeId = $request['place_id'];
+    
+        // Make the GET request to the new Places API endpoint with the API key in the header
+        $response = Http::withHeaders([
+            'X-Goog-Api-Key' => 'AIzaSyDw06Pb4KkJo3kUnq5vCeTHXEJZx4_X7jM',
+            'X-Goog-FieldMask' => '*',
+        ])->get("https://places.googleapis.com/v1/places/{$placeId}");
+    
+        // Return the API response as JSON
+        return $response->json();
     }
 }

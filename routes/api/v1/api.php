@@ -21,6 +21,8 @@ Route::group(['namespace' => 'Api\V1'], function () {
          Route::get('search', 'ProductController@searchProducts');
         //   Route::get('drinks', 'ProductController@get_drinks');
            Route::get('test', 'ProductController@test_get_recommended_products');
+           // New endpoint for uploading a product
+        Route::post('create', 'ProductController@uploadProduct');
     }); 
         //registration and login
         Route::group(['prefix' => 'auth', 'namespace' => 'Auth'], function () {
