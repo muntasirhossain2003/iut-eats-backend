@@ -142,6 +142,89 @@ public function uploadProduct(Request $request)
             'product' => $food
         ], 200);
     }
+    public function editProduct(Request $request)
+{
+    // Validate the incoming request data including the product ID
+    $validator = Validator::make($request->all(), [
+        'id'          => 'required|exists:foods,id', // Ensure ID exists in database
+        'name'        => 'required|string|max:255',
+        'description' => 'required|string',
+        'price'       => 'required|integer',
+        'img'         => 'sometimes|image|max:2048', // Image is optional for updates
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status'  => 'error',
+            'message' => 'Validation failed',
+            'errors'  => $validator->errors()
+        ], 400);
+    }
+
+    // Find the existing product
+    $food = Food::find($request->id);
+
+    // Handle new image upload if provided
+    if ($request->hasFile('img')) {
+        $image = $request->file('img');
+        $imageName = time() . '_' . $image->getClientOriginalName();
+        $destinationPath = public_path('/uploads/images');
+        $image->move($destinationPath, $imageName);
+        $food->img = 'images/' . $imageName;
+    }
+
+    // Update product details
+    $food->name = $request->input('name');
+    $food->description = $request->input('description');
+    $food->price = $request->input('price');
+
+    // Server-managed fields (location, type_id, etc.) remain unchanged
+    $food->save();
+
+    return response()->json([
+        'status'  => 'success',
+        'message' => 'Product updated successfully',
+        'product' => $food
+    ], 200);
+}
+
+public function deleteProducts(Request $request)
+{
+    // Validate that the ID exists in the foods table
+    $validator = Validator::make($request->all(), [
+        'id' => 'required|exists:foods,id',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status'  => 'error',
+            'message' => 'Invalid query',
+            'errors'  => $validator->errors()
+        ], 400);
+    }
+
+    // Retrieve the product ID from the query parameter
+    $id = $request->input('id');
+
+    // Find the product using the Food model
+    $food = Food::find($id);
+
+    if (!$food) {
+        return response()->json([
+            'status'  => 'error',
+            'message' => 'Product not found',
+        ], 404);
+    }
+
+    // Delete the product
+    $food->delete();
+
+    return response()->json([
+        'status'  => 'success',
+        'message' => 'Product deleted successfully',
+    ], 200);
+}
+
     
 
        public function test_get_recommended_products(Request $request){
