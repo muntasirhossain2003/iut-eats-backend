@@ -25,6 +25,7 @@ Route::group(['namespace' => 'Api\V1'], function () {
         Route::post('create', 'ProductController@uploadProduct');
         Route::post('edit', 'ProductController@editProduct');
         Route::get('delete', 'ProductController@deleteProducts');
+        Route::get('get_user_order', 'OrderController@get_user_order');
     }); 
         //registration and login
         Route::group(['prefix' => 'auth', 'namespace' => 'Auth'], function () {
@@ -56,6 +57,7 @@ Route::group(['namespace' => 'Api\V1'], function () {
             Route::put('refund-request', 'OrderController@refund_request');
             Route::get('track', 'OrderController@track_order');
             Route::put('payment-method', 'OrderController@update_payment_method');
+            Route::post('user_order', 'OrderController@handle_user_order');
         });
             });
             

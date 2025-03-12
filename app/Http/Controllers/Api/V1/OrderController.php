@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
 use App\Models\Food;
 use App\Models\Order;
+use App\Models\UserOrder;
 use App\Models\OrderDetail;
 use Illuminate\Support\Facades\Validator;
 
@@ -116,5 +117,63 @@ class OrderController extends Controller
         });
         return response()->json($orders, 200);
     }
+
+    public function handle_user_order(Request $request)
+    {
+        // Validate the incoming request data
+        $validator = Validator::make($request->all(), [
+            'user_name'        => 'required|string|max:255',
+            'user_phone'       => 'required|string|max:15',
+            'delivery_address' => 'required|string',
+            'order_amount'     => 'required|numeric',
+            'order_items'      => 'required|json' // Ensure order_items is valid JSON
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Validation failed',
+                'errors'  => $validator->errors()
+            ], 400);
+        }
+    
+        // Create a new UserOrder instance
+        $userOrder = new UserOrder();
+        $userOrder->user_name = $request->input('user_name');
+        $userOrder->user_phone = $request->input('user_phone');
+        $userOrder->delivery_address = $request->input('delivery_address');
+        $userOrder->order_amount = $request->input('order_amount');
+        $userOrder->order_items = $request->input('order_items');
+    
+        // Save the new order entry to the database
+        $userOrder->save();
+    
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Order created successfully',
+            'order'   => $userOrder
+        ], 200);
+    }
+    public function get_user_order()
+    {
+        // Fetch all orders from the database
+        $orders = UserOrder::all();
+    
+        if ($orders->isEmpty()) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'No orders found'
+            ], 404);
+        }
+    
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Orders retrieved successfully',
+            'orders'  => $orders
+        ], 200);
+    }
+    
+
+    
     
 }
